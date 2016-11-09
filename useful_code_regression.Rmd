@@ -1,0 +1,79 @@
+---
+title: "Useful R code - Regression"
+author: "Nils Hoyer"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+
+
+# Regression analysis
+## Simple linear regression
+Example from coursera course
+```{r message=FALSE}
+#Open library UsingR which contains the diamonds dataset
+library(UsingR)
+data("diamond")
+```
+
+```{r}
+
+
+#Start with a plot of price against mass (in carats). Add a fitted line 
+plot(diamond$carat, diamond$price,
+        xlab="Mass (carats)",
+        ylab="Price (dollar)",
+        bg="lightblue",
+        col="black", cex=1.1, pch=21, frame=FALSE)
+abline(lm(price~carat, data=diamond), lwd=2)
+
+# Assign the coefficients from the linear regression to a "fit" variable and call its coefficients
+fit <- lm(price~carat, data=diamond)
+coef(fit)
+
+#Center the data by subtracting the mean. this gives the intercept at the average x (the average size of diamond)
+fit2 <- lm(price~I(carat - mean(carat)), data = diamond)
+coef(fit2)
+
+#Now we try to fit some values of x
+newx <- c(0.16, 0.27, 0.34)
+predict(fit, newdata = data.frame(carat = newx))
+
+#Residuals. First create a regression
+y <- diamond$price; x <- diamond$carat;n <- length(y)
+fit <- lm(y~x)
+
+#Call the sigma from summary which gives the residual variation
+summary(fit)$sigma
+
+#Call all the important coefficients
+summary(fit)$coefficients
+
+#Getting a confidence interval for the intercept, we call the appropriate cells in the coefficients table
+sumCoef <- summary(fit)$coefficients
+sumCoef[1,1] + c(-1,1) * qt(.975, df=fit$df) * sumCoef[1,2]
+
+#Getting a confidence interval for the slope, we call the appropriate cells in the coefficients table
+sumCoef <- summary(fit)$coefficients
+sumCoef[2,1] + c(-1,1) * qt(.975, df=fit$df) * sumCoef[2,2]
+
+```
+
+##Diagnostic plots
+Another example from coursera course with diagnostic plots
+```{r}
+data(swiss)
+#The following just says that the plots should be grouped 2x2
+par(mfrow=c(2,2))
+#The . in the following line means that we include all covariates
+fit <- lm(Fertility~. ,data=swiss)
+plot(fit)
+
+#The different influence measures
+```
+

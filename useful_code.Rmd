@@ -1,0 +1,143 @@
+---
+title: "Useful R code"
+author: "Nils Hoyer"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Exploratory data analysis
+## Table functions
+The table function summarizes a table
+
+```{r}
+Gender <- c("Female","Female","Male","Male")
+Restaurant <- c("Yes","No","Yes","No")
+Count <- c(220, 780, 400, 600)
+DiningSurvey <- data.frame(Gender, Restaurant, Count)
+DiningSurvey
+table(DiningSurvey)
+```
+
+Only include the values >650
+```{r}
+table(DiningSurvey$Count>650)
+
+```
+
+Also include missing 
+```{r}
+DiningSurvey$Restaurant <- c("Yes", "No", "Yes", NA)
+table(DiningSurvey$Restaurant, useNA="always")
+```
+
+Exclude males
+```{r}
+table(DiningSurvey$Gender, exclude = "Male")
+```
+
+Use margin.table to summarize rows or collumns
+```{r}
+RentalUnits <- matrix(c(45,37,34,10,15,12,24,18,19),ncol=3,byrow=TRUE)
+colnames(RentalUnits) <- c("Section1","Section2","Section3")
+rownames(RentalUnits) <- c("Rented","Vacant","Reserved")
+RentalUnits <- as.table(RentalUnits)
+#Showing sums of rows
+margin.table(RentalUnits, 1)
+#Showing sums of columns
+margin.table(RentalUnits, 2)
+```
+
+Use prop.table to show the percentages (proportions)
+```{r}
+#Cell percentages
+prop.table(RentalUnits)
+#Row percentages
+prop.table(RentalUnits, 1)
+#Columns percentages
+prop.table(RentalUnits, 2)
+```
+
+Show the table in a pretty format
+```{r}
+ftable(RentalUnits)
+
+```
+
+Perform a Chi-squared test on the table (what is going on???)
+```{r}
+summary(RentalUnits)
+```
+
+Use as.data.frame to list frequencies
+```{r}
+as.data.frame(RentalUnits)
+```
+
+Use addmargins to add an extra row of sums or column of sums
+```{r}
+addmargins(RentalUnits)
+#Can be used on prop.table
+addmargins(prop.table(RentalUnits))
+
+#Can be used only on columns
+addmargins(prop.table(RentalUnits,1))
+
+
+#Can be used only on rows
+addmargins(prop.table(RentalUnits,2))
+```
+
+
+
+# Regression analysis
+## Simple linear regression
+Example from coursera course
+```{r}
+#Open library UsingR which contains the diamonds dataset
+library(UsingR)
+data("diamond")
+
+#Start with a plot of price against mass (in carats). Add a fitted line 
+plot(diamond$carat, diamond$price,
+        xlab="Mass (carats)",
+        ylab="Price (dollar)",
+        bg="lightblue",
+        col="black", cex=1.1, pch=21, frame=FALSE)
+abline(lm(price~carat, data=diamond), lwd=2)
+
+# Assign the coefficients from the linear regression to a "fit" variable and call its coefficients
+fit <- lm(price~carat, data=diamond)
+coef(fit)
+
+#Center the data by subtracting the mean. this gives the intercept at the average x (the average size of diamond)
+fit2 <- lm(price~I(carat - mean(carat)), data = diamond)
+coef(fit2)
+
+#Now we try to fit some values of x
+newx <- c(0.16, 0.27, 0.34)
+predict(fit, newdata = data.frame(carat = newx))
+
+#Residuals. First create a regression
+y <- diamond$price; x <- diamond$carat;n <- length(y)
+fit <- lm(y~x)
+
+#Call the sigma from summary which gives the residual variation
+summary(fit)$sigma
+
+#Call all the important coefficients
+summary(fit)$coefficients
+
+#Getting a confidence interval for the intercept, we call the appropriate cells in the coefficients table
+sumCoef <- summary(fit)$coefficients
+sumCoef[1,1] + c(-1,1) * qt(.975, df=fit$df) * sumCoef[1,2]
+
+#Getting a confidence interval for the slope, we call the appropriate cells in the coefficients table
+sumCoef <- summary(fit)$coefficients
+sumCoef[2,1] + c(-1,1) * qt(.975, df=fit$df) * sumCoef[2,2]
+
+```
+
